@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var threshold: Float = defaultThreshold
 
     private var camera: Camera? = null
-    private var cameraId: Int = Camera.CameraInfo.CAMERA_FACING_FRONT
+    private var cameraId: Int = Camera.CameraInfo.CAMERA_FACING_BACK
     private val previewWidth: Int = 640
     private val previewHeight: Int = 480
 
@@ -69,23 +69,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (hasPermissions()) {
+        if (hasCameraPermission()) {
             init()
         } else {
             requestPermission()
         }
 
-    }
-
-    private fun hasPermissions(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (permission in permissions) {
-                if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false
-                }
-            }
-        }
-        return true
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -243,10 +232,10 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == permissionReqCode) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (hasCameraPermission()) {
                 init()
             } else {
-                Toast.makeText(this, "请授权相机权限", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Please accept permission", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -255,11 +244,7 @@ class MainActivity : AppCompatActivity() {
         val selfPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.CAMERA
         )
-        return selfPermission == PackageManager.PERMISSION_DENIED
-    }
-
-    private fun requestCameraPermission() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 123)
+        return selfPermission == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onResume() {
@@ -269,8 +254,6 @@ class MainActivity : AppCompatActivity() {
             if (!enginePrepared) {
                 Toast.makeText(this, "Engine init failed.", Toast.LENGTH_LONG).show()
             }
-        } else {
-            requestCameraPermission()
         }
 
         super.onResume()
